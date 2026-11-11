@@ -3,3 +3,8 @@ spring:
     url: jdbc:postgresql://localhost:5432/tabletap
     username: tabletap
     password: tabletap
+
+tabletap:
+  jwt:
+    secret: dev-only-secret-never-use-in-production-0123456789
+    cookie-secure: false

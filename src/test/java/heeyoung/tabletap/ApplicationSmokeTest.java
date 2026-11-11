@@ -3,33 +3,33 @@ package heeyoung.tabletap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import heeyoung.tabletap.support.IntegrationTest;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 class ApplicationSmokeTest extends IntegrationTest {
 
     @Autowired
-    TestRestTemplate rest;
-
-    @Autowired
     JdbcTemplate jdbc;
 
     @Test
     void healthEndpointReportsUp() {
-        var response = rest.getForEntity("/actuator/health", Map.class);
+        var response = get("/actuator/health", null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).containsEntry("status", "UP");
+        assertThat(response.getBody().get("status").asText()).isEqualTo("UP");
     }
 
     @Test
     void migrationsCreateTenantTable() {
         Integer rows = jdbc.queryForObject("select count(*) from tenant", Integer.class);
 
-        assertThat(rows).isZero();
+        assertThat(rows).isNotNegative();
+    }
+
+    @Test
+    void unknownPathsAreDenied() {
+        assertThat(get("/not-a-real-page", null).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 }

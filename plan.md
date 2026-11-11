@@ -244,6 +244,7 @@ Development happens on Windows. Production is Linux on AWS. To keep them compati
 - `@Transactional` on service methods, not controllers.
 - Schema changes only through new Flyway migrations. Never edit an applied migration. `spring.jpa.hibernate.ddl-auto=validate`.
 - Tests assert behaviour through the HTTP API or a service's public methods, not internals.
+- Integration tests extend `IntegrationTest`. They use Testcontainers when Docker is running. Without Docker, set `TEST_DATABASE_URL` (for example `jdbc:postgresql://localhost:5432/tabletap`, user and password `tabletap`) to run them against an existing database. With neither, they are skipped. Because the database can outlive a test run, every test creates its own uniquely named data.
 - Small commits, one logical change each, with clear messages.
 
 ## Known limitations

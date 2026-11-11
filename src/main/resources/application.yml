@@ -7,9 +7,17 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+  mvc:
+    problemdetails:
+      enabled: true
 
 management:
   endpoints:
     web:
       exposure:
         include: health
+
+tabletap:
+  jwt:
+    ttl: 8h
+    cookie-secure: true
