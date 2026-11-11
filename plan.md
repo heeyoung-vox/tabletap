@@ -107,7 +107,7 @@ option_group                    (tenant-owned)
   id, tenant_id, menu_item_id, name, min_select, max_select, sort_order
   check (min_select >= 0 and max_select >= min_select)
 
-option                          (tenant-owned)
+menu_option                       (tenant-owned)
   id, tenant_id, option_group_id, name, price_delta, available, sort_order
 
 orders                          (tenant-owned)
@@ -136,7 +136,8 @@ JSON API under `/api`, server-rendered pages elsewhere. Errors use RFC 7807 `Pro
 **Admin (JWT required, tenant from token)**
 
 - `/api/admin/categories` CRUD
-- `/api/admin/items` CRUD, including nested option groups and options
+- `/api/admin/items` CRUD, including nested option groups and options. `PUT` replaces the option groups as a whole, so their ids change.
+- `PUT /api/admin/items/{id}/availability` with body `{ "available": false }` marks an item sold out.
 - `/api/admin/tables` CRUD
 - `POST /api/admin/tables/{id}/regenerate-qr`
 - `GET /api/admin/tables/{id}/qr.png`
@@ -185,9 +186,9 @@ Done when: an integration test registers two tenants and proves a user of tenant
 
 ### Phase 3: menu management
 
-- Migrations and entities for `category`, `menu_item`, `option_group`, `option`.
+- Migrations and entities for `category`, `menu_item`, `option_group`, `menu_option` (`option` is an SQL keyword).
 - Admin CRUD with bean validation (non-negative prices, `max_select >= min_select`).
-- Admin menu page.
+- Login and register pages, and the admin menu page (Thymeleaf shell, vanilla JS calling the JSON API).
 
 Done when: an owner can build a full menu with option groups through the UI, and tests cover validation failures and tenant isolation.
 

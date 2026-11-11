@@ -66,6 +66,18 @@ public abstract class IntegrationTest {
         return rest.exchange(path, HttpMethod.POST, new HttpEntity<>(body, headers(cookie)), JsonNode.class);
     }
 
+    protected ResponseEntity<String> getPage(String path, String cookie) {
+        return rest.exchange(path, HttpMethod.GET, new HttpEntity<>(headers(cookie)), String.class);
+    }
+
+    protected ResponseEntity<JsonNode> put(String path, Object body, String cookie) {
+        return rest.exchange(path, HttpMethod.PUT, new HttpEntity<>(body, headers(cookie)), JsonNode.class);
+    }
+
+    protected ResponseEntity<JsonNode> delete(String path, String cookie) {
+        return rest.exchange(path, HttpMethod.DELETE, new HttpEntity<>(headers(cookie)), JsonNode.class);
+    }
+
     protected static String setCookieHeader(ResponseEntity<?> response) {
         return response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
     }

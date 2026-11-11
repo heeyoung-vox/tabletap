@@ -7,6 +7,11 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        # Loads lazy collections for many parents in one query, which avoids
+        # N+1 selects when listing items with their option groups.
+        default_batch_fetch_size: 50
   mvc:
     problemdetails:
       enabled: true

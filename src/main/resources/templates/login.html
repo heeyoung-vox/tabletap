@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Log in · TableTap</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="auth">
+    <h1>TableTap</h1>
+    <p class="lead">Log in to manage your restaurant.</p>
+    <form data-endpoint="/api/auth/login">
+        <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="username" required>
+        </div>
+        <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="button primary" type="submit">Log in</button>
+        <p class="error" role="alert"></p>
+    </form>
+    <p class="switch">New here? <a th:href="@{/register}">Register your restaurant</a></p>
+</main>
+<script th:src="@{/js/api.js}"></script>
+<script th:src="@{/js/auth.js}"></script>
+</body>
+</html>

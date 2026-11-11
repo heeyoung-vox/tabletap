@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Menu · TableTap</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header class="topbar">
+    <span class="brand">TableTap</span>
+    <span class="who">
+        <span id="who" class="muted"></span>
+        <button id="logout" class="button small" type="button">Log out</button>
+    </span>
+</header>
+
+<main class="page">
+    <div class="page-head">
+        <h1>Menu</h1>
+        <form id="category-form" class="inline-form">
+            <input name="name" type="text" maxlength="120" placeholder="New category" aria-label="New category name" required>
+            <button class="button primary" type="submit">Add category</button>
+        </form>
+    </div>
+    <p id="page-error" class="error" role="alert"></p>
+    <div id="menu"></div>
+</main>
+
+<dialog id="item-dialog">
+    <form id="item-form">
+        <h2 id="item-dialog-title">New item</h2>
+        <div class="field">
+            <label for="item-name">Name</label>
+            <input id="item-name" name="name" type="text" maxlength="120" required>
+        </div>
+        <div class="field">
+            <label for="item-description">Description</label>
+            <textarea id="item-description" name="description" rows="2" maxlength="1000"></textarea>
+        </div>
+        <div class="row">
+            <div class="field">
+                <label for="item-category">Category</label>
+                <select id="item-category" name="categoryId" required></select>
+            </div>
+            <div class="field">
+                <label for="item-price">Price</label>
+                <input id="item-price" name="basePrice" type="number" min="0" step="1" required>
+            </div>
+        </div>
+        <div class="field">
+            <label class="check"><input id="item-available" name="available" type="checkbox" checked> Available to order</label>
+        </div>
+
+        <h3>Options</h3>
+        <p class="muted">Groups such as Size or Toppings. "Min" 1 makes a choice required.</p>
+        <div id="groups"></div>
+        <button id="add-group" class="button small" type="button">Add option group</button>
+
+        <p id="item-error" class="error" role="alert"></p>
+        <div class="dialog-foot">
+            <button id="item-cancel" class="button" type="button">Cancel</button>
+            <button class="button primary" type="submit">Save item</button>
+        </div>
+    </form>
+</dialog>
+
+<script th:src="@{/js/api.js}"></script>
+<script th:src="@{/js/menu.js}"></script>
+</body>
+</html>
