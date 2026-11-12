@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>QR sheet · TableTap</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="print-page">
+<div class="print-bar">
+    <span id="print-status" class="muted">Loading tables…</span>
+    <button id="print" class="button primary" type="button">Print</button>
+</div>
+<div id="sheet" class="sheet"></div>
+
+<script th:src="@{/js/api.js}"></script>
+<script th:src="@{/js/tables-print.js}"></script>
+</body>
+</html>

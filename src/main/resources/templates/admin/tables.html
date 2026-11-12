@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tables · TableTap</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header class="topbar">
+    <span class="brand">TableTap</span>
+    <nav class="nav">
+        <a th:href="@{/admin/menu}">Menu</a>
+        <a th:href="@{/admin/tables}" aria-current="page">Tables</a>
+    </nav>
+    <span class="who">
+        <span id="who" class="muted"></span>
+        <button id="logout" class="button small" type="button">Log out</button>
+    </span>
+</header>
+
+<main class="page">
+    <div class="page-head">
+        <h1>Tables</h1>
+        <form id="table-form" class="inline-form">
+            <input name="label" type="text" maxlength="40" placeholder="Table 1" aria-label="New table label" required>
+            <button class="button primary" type="submit">Add table</button>
+        </form>
+    </div>
+    <p class="muted">Each table has its own QR code. Print the sheet, cut out the codes and stick one on each table.
+        <a th:href="@{/admin/tables/print}" target="_blank" rel="noopener">Open the printable QR sheet</a></p>
+    <p id="page-error" class="error" role="alert"></p>
+    <div id="tables" class="table-grid"></div>
+</main>
+
+<script th:src="@{/js/api.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+<script th:src="@{/js/tables.js}"></script>
+</body>
+</html>

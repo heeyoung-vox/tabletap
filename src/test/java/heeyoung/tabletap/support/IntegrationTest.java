@@ -70,6 +70,10 @@ public abstract class IntegrationTest {
         return rest.exchange(path, HttpMethod.GET, new HttpEntity<>(headers(cookie)), String.class);
     }
 
+    protected ResponseEntity<byte[]> getBytes(String path, String cookie) {
+        return rest.exchange(path, HttpMethod.GET, new HttpEntity<>(headers(cookie)), byte[].class);
+    }
+
     protected ResponseEntity<JsonNode> put(String path, Object body, String cookie) {
         return rest.exchange(path, HttpMethod.PUT, new HttpEntity<>(body, headers(cookie)), JsonNode.class);
     }

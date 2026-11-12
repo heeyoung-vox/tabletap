@@ -212,12 +212,4 @@ document.getElementById("category-form").addEventListener("submit", (event) => {
     });
 });
 
-document.getElementById("logout").addEventListener("click", async () => {
-    await api("POST", "/api/auth/logout");
-    window.location.href = "/login";
-});
-
-api("GET", "/api/admin/me").then((me) => {
-    document.getElementById("who").textContent = me.email;
-});
 run(async () => {});

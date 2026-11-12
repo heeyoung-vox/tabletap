@@ -7,3 +7,4 @@ spring:
 tabletap:
   jwt:
     secret: ${JWT_SECRET}
+  base-url: ${APP_BASE_URL}

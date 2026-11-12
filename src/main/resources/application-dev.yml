@@ -8,3 +8,5 @@ tabletap:
   jwt:
     secret: dev-only-secret-never-use-in-production-0123456789
     cookie-secure: false
+  # Set APP_BASE_URL to http://<this machine's LAN IP>:8080 to scan codes with a phone.
+  base-url: ${APP_BASE_URL:http://localhost:8080}

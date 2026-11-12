@@ -15,7 +15,7 @@ This file is the source of truth for implementation sessions. If a session needs
 | Database | PostgreSQL 16, Flyway migrations |
 | Auth | Spring Security, JWT for staff (stored in an HttpOnly cookie) |
 | QR | ZXing (`com.google.zxing:core`, `javase`) |
-| PDF sheet | OpenPDF |
+| QR sheet | Printable HTML page (`/admin/tables/print`), printed or saved as PDF from the browser |
 | Live updates | Server-Sent Events (`SseEmitter`) |
 | API docs | springdoc-openapi |
 | Tests | JUnit 5, AssertJ, Testcontainers (PostgreSQL), MockMvc |
@@ -141,7 +141,7 @@ JSON API under `/api`, server-rendered pages elsewhere. Errors use RFC 7807 `Pro
 - `/api/admin/tables` CRUD
 - `POST /api/admin/tables/{id}/regenerate-qr`
 - `GET /api/admin/tables/{id}/qr.png`
-- `GET /api/admin/tables/qr-sheet.pdf`
+- `GET /api/admin/restaurant` returns the name, slug and currency of the logged-in restaurant.
 - `GET /api/admin/orders?status=`
 - `POST /api/admin/orders/{id}/transition` with body `{ "to": "ACCEPTED" }`
 - `GET /api/admin/orders/stream` (SSE)
@@ -157,7 +157,7 @@ JSON API under `/api`, server-rendered pages elsewhere. Errors use RFC 7807 `Pro
 - `/t/{qrToken}` customer menu and cart, mobile-first.
 - `/t/{qrToken}/orders/{publicToken}` order status.
 - `/login`, `/register`
-- `/admin/menu`, `/admin/tables`, `/admin/kitchen`
+- `/admin/menu`, `/admin/tables`, `/admin/tables/print`, `/admin/kitchen`
 
 ## Phases
 
@@ -196,7 +196,8 @@ Done when: an owner can build a full menu with option groups through the UI, and
 
 - Migration and entity for `dining_table`.
 - Table CRUD, token regeneration.
-- PNG endpoint via ZXing. PDF sheet with one labelled QR per table.
+- PNG endpoint via ZXing. Printable sheet with one labelled QR per active table. This is an HTML print page, not a generated PDF, because the built-in PDF fonts cannot render Vietnamese names.
+- `TableLookup` resolves a QR token to its tenant and table with plain SQL. `/t/{qrToken}` shows a placeholder page until phase 5.
 - `APP_BASE_URL` config property used to build the encoded URL.
 
 Done when: scanning a printed code with a phone opens `/t/{qrToken}`, and a regenerated token makes the old URL return 404.

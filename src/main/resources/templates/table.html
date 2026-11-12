@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${restaurantName}">Restaurant</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="auth">
+    <h1 th:text="${restaurantName}">Restaurant</h1>
+    <p class="lead">Table <strong th:text="${tableLabel}">1</strong></p>
+    <p class="muted">The menu will appear here soon.</p>
+</main>
+</body>
+</html>
