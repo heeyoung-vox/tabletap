@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -29,6 +30,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler(InvalidOrderException.class)
     ProblemDetail invalidOrder(InvalidOrderException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    ProblemDetail concurrentChange(ObjectOptimisticLockingFailureException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Someone else changed this at the same time. Reload and try again.");
     }
 
     @ExceptionHandler(IllegalOrderTransitionException.class)

@@ -7,7 +7,9 @@ import heeyoung.tabletap.order.OrderDtos.PlaceOrderRequest;
 import heeyoung.tabletap.tenant.Tenant;
 import heeyoung.tabletap.tenant.TenantContext;
 import heeyoung.tabletap.tenant.TenantRepository;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,13 +52,16 @@ public class OrderService {
         return orders.findByPublicToken(publicToken).map(order -> response(order, currentTenant()));
     }
 
-    // Oldest first, so the kitchen works through orders in the order they came in.
+    // The newest orders within the limit, listed oldest first so the kitchen works
+    // through them in the order they came in. Taking the oldest instead would hide
+    // new orders once old ones pile up unpaid.
     @Transactional(readOnly = true)
     public List<OrderResponse> list(Collection<OrderStatus> statuses) {
-        Sort oldestFirst = Sort.by("createdAt");
-        List<CustomerOrder> found = statuses.isEmpty()
-                ? orders.findBy(oldestFirst, LIST_LIMIT)
-                : orders.findByStatusIn(statuses, oldestFirst, LIST_LIMIT);
+        Sort newestFirst = Sort.by(Sort.Direction.DESC, "createdAt");
+        List<CustomerOrder> found = new ArrayList<>(statuses.isEmpty()
+                ? orders.findBy(newestFirst, LIST_LIMIT)
+                : orders.findByStatusIn(statuses, newestFirst, LIST_LIMIT));
+        Collections.reverse(found);
         Tenant tenant = currentTenant();
         return found.stream().map(order -> response(order, tenant)).toList();
     }

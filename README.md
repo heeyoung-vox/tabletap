@@ -124,4 +124,6 @@ Settings are read from environment variables: `DB_URL`, `DB_USERNAME`, `DB_PASSW
 - Anyone with a table's URL can order from anywhere. Real products add a session code or staff confirmation. The Accepted step is the mitigation here.
 - Live updates are held in the app's memory, so it runs as a single instance.
 - No rate limiting on the public endpoints.
+- Kitchen events are written on the request thread after commit, so a kitchen screen on a stalled connection can slow down the request that placed or moved an order.
+- The kitchen list shows the newest 200 open orders. Orders that are served but never marked paid stay open.
 - No online payment, customer accounts, inventory, image upload (items take an image URL) or translations.

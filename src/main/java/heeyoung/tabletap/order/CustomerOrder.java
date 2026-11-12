@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +57,11 @@ public class CustomerOrder {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = createdAt;
+
+    // Two staff moving the same order at once: the second update fails instead
+    // of silently overwriting the first.
+    @Version
+    private long version;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")
