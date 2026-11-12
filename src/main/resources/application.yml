@@ -16,6 +16,11 @@ spring:
     problemdetails:
       enabled: true
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  paths-to-match: /api/**
+
 management:
   endpoints:
     web:

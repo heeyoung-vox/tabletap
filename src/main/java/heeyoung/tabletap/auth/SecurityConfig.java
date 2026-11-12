@@ -48,6 +48,7 @@ public class SecurityConfig {
                         // already authorized when it started.
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers("/api/auth/**", "/actuator/health", "/error").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/login", "/register", "/t/**", "/api/public/**", "/css/**", "/js/**").permitAll()
                         .requestMatchers("/", "/api/admin/**", "/admin/**").authenticated()
                         .anyRequest().denyAll())

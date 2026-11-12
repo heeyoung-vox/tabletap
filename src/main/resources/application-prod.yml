@@ -4,6 +4,10 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+server:
+  # Caddy terminates HTTPS. This makes redirects and secure cookies use https.
+  forward-headers-strategy: native
+
 tabletap:
   jwt:
     secret: ${JWT_SECRET}
