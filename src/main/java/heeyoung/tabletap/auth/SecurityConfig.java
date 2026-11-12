@@ -2,6 +2,7 @@ package heeyoung.tabletap.auth;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import heeyoung.tabletap.tenant.TenantContextFilter;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +44,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // The kitchen stream finishes on an async dispatch. Its request was
+                        // already authorized when it started.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers("/api/auth/**", "/actuator/health", "/error").permitAll()
                         .requestMatchers("/login", "/register", "/t/**", "/api/public/**", "/css/**", "/js/**").permitAll()
                         .requestMatchers("/", "/api/admin/**", "/admin/**").authenticated()

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kitchen · TableTap</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header class="topbar">
+    <span class="brand">TableTap</span>
+    <nav class="nav">
+        <a th:href="@{/admin/kitchen}" aria-current="page">Kitchen</a>
+        <a th:href="@{/admin/menu}">Menu</a>
+        <a th:href="@{/admin/tables}">Tables</a>
+    </nav>
+    <span class="who">
+        <span id="who" class="muted"></span>
+        <button id="logout" class="button small" type="button">Log out</button>
+    </span>
+</header>
+
+<main class="kitchen">
+    <div class="kitchen-head">
+        <h1>Orders</h1>
+        <span id="live" class="live" role="status">Connecting…</span>
+    </div>
+    <p id="page-error" class="error" role="alert"></p>
+    <div class="board">
+        <section class="lane" data-status="PLACED"><h2>New <span class="count"></span></h2><div class="cards"></div></section>
+        <section class="lane" data-status="ACCEPTED"><h2>Accepted <span class="count"></span></h2><div class="cards"></div></section>
+        <section class="lane" data-status="PREPARING"><h2>Cooking <span class="count"></span></h2><div class="cards"></div></section>
+        <section class="lane" data-status="SERVED"><h2>Served, unpaid <span class="count"></span></h2><div class="cards"></div></section>
+    </div>
+</main>
+
+<script th:src="@{/js/api.js}"></script>
+<script th:src="@{/js/money.js}"></script>
+<script th:src="@{/js/admin.js}"></script>
+<script th:src="@{/js/kitchen.js}"></script>
+</body>
+</html>

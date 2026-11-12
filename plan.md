@@ -217,6 +217,7 @@ Done when: unit tests cover pricing and option rules (missing required option, t
 - Order list and transition endpoint backed by the state machine.
 - SSE stream per tenant. Publish on order placed and on status change.
 - Kitchen page that updates live, with a reload fallback on reconnect.
+- Events are sent after the transaction commits, with a heartbeat comment every 25 seconds so proxies keep the stream open. The customer status page polls every 5 seconds instead of holding a stream, which keeps one open connection per kitchen screen rather than per diner.
 
 Done when: placing an order in one browser shows it on the kitchen page in another without refresh, tests cover every legal and illegal transition, and a tenant only receives its own events.
 

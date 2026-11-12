@@ -40,6 +40,11 @@ public class PageController {
         return "admin/menu";
     }
 
+    @GetMapping("/admin/kitchen")
+    String kitchen() {
+        return "admin/kitchen";
+    }
+
     @GetMapping("/admin/tables")
     String tables() {
         return "admin/tables";
