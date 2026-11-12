@@ -1,6 +1,7 @@
 package heeyoung.tabletap.web;
 
 import heeyoung.tabletap.floor.TableLookup;
+import heeyoung.tabletap.order.OrderLookup;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,9 +13,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class PageController {
 
     private final TableLookup tableLookup;
+    private final OrderLookup orderLookup;
 
-    public PageController(TableLookup tableLookup) {
+    public PageController(TableLookup tableLookup, OrderLookup orderLookup) {
         this.tableLookup = tableLookup;
+        this.orderLookup = orderLookup;
     }
 
     @GetMapping("/")
@@ -53,6 +56,18 @@ public class PageController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "This QR code is no longer valid"));
         model.addAttribute("restaurantName", table.restaurantName());
         model.addAttribute("tableLabel", table.tableLabel());
+        model.addAttribute("qrToken", qrToken);
         return "table";
+    }
+
+    // The page loads the order itself. Checking the token here turns a mistyped
+    // link into a 404 instead of an empty page.
+    @GetMapping("/t/{qrToken}/orders/{publicToken}")
+    String order(@PathVariable String qrToken, @PathVariable String publicToken, Model model) {
+        OrderLookup.parse(publicToken).flatMap(orderLookup::tenantOf)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        model.addAttribute("qrToken", qrToken);
+        model.addAttribute("publicToken", publicToken);
+        return "order";
     }
 }

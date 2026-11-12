@@ -32,9 +32,9 @@ Every tenant-owned table has a `tenant_id` column. Entities map it with Hibernat
 How the tenant is resolved per request:
 
 - **Staff requests** (`/admin/**`, `/api/admin/**`): from the `tenantId` claim in the JWT.
-- **Customer requests** (`/t/{qrToken}/**`, `/api/public/{qrToken}/**`): from the table that owns the QR token.
+- **Customer requests** (`/t/{qrToken}/**`, `/api/public/{qrToken}/**`): from the table that owns the QR token. Order status requests (`/api/public/orders/{publicToken}`) use the order that owns the public token.
 
-A servlet filter sets `TenantContext` at the start of the request and clears it in a `finally` block.
+For staff, a servlet filter sets `TenantContext` from the JWT and clears it in a `finally` block. For customers, the public controller resolves the token with plain SQL and runs the work inside `TenantContext.callAs(tenantId, ...)`. Only two endpoints need this and each takes its tenant from a different token, so an explicit call is simpler than a second filter.
 
 Two lookups happen before the tenant is known, so they must not go through tenant-filtered entities. Do both with `JdbcTemplate`:
 
@@ -111,14 +111,15 @@ menu_option                       (tenant-owned)
   id, tenant_id, option_group_id, name, price_delta, available, sort_order
 
 orders                          (tenant-owned)
-  id, tenant_id, dining_table_id, public_token (unique), status, total, note, created_at, updated_at
+  id, tenant_id, dining_table_id (nullable, on delete set null), table_label,
+  public_token (unique), status, total, note, created_at, updated_at
 
 order_item                      (tenant-owned)
-  id, tenant_id, order_id, menu_item_id (nullable, on delete set null),
+  id, tenant_id, order_id, position, menu_item_id (nullable, on delete set null),
   item_name, unit_price, quantity, line_total, note
 
 order_item_option               (tenant-owned)
-  id, tenant_id, order_item_id, group_name, option_name, price_delta
+  id, tenant_id, order_item_id, position, group_name, option_name, price_delta
 ```
 
 `unit_price` is `base_price` plus the sum of selected `price_delta` values. `line_total` is `unit_price * quantity`. `orders.total` is the sum of line totals.
@@ -204,8 +205,8 @@ Done when: scanning a printed code with a phone opens `/t/{qrToken}`, and a rege
 
 ### Phase 5: customer ordering
 
-- QR token lookup filter that sets the tenant.
-- Public menu endpoint (only `available` items and options).
+- Tenant resolved from the QR token (see design decision 1).
+- Public menu endpoint (only `available` items and options, and no item whose required option group has nothing left). Order pricing validates against this same `CustomerMenu`, so customers can only order what the menu offered. A rule violation returns HTTP 422 with a message for the customer.
 - Order placement with server-side validation and pricing.
 - Customer menu page with a `localStorage` cart, and the order status page.
 

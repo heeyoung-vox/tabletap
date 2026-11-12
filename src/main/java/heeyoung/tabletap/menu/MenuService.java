@@ -4,7 +4,9 @@ import heeyoung.tabletap.menu.MenuDtos.CategoryRequest;
 import heeyoung.tabletap.menu.MenuDtos.CategoryResponse;
 import heeyoung.tabletap.menu.MenuDtos.ItemRequest;
 import heeyoung.tabletap.menu.MenuDtos.ItemResponse;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -55,6 +57,42 @@ public class MenuService {
     @Transactional(readOnly = true)
     public List<ItemResponse> listItems() {
         return items.findAll(DISPLAY_ORDER).stream().map(ItemResponse::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CustomerMenu customerMenu() {
+        List<MenuItem> all = items.findAll(DISPLAY_ORDER);
+        return new CustomerMenu(categories.findAll(DISPLAY_ORDER).stream()
+                .map(category -> new CustomerMenu.Category(category.getId(), category.getName(), all.stream()
+                        .filter(item -> item.getCategory().getId().equals(category.getId()))
+                        .flatMap(item -> orderable(item).stream())
+                        .toList()))
+                .filter(category -> !category.items().isEmpty())
+                .toList());
+    }
+
+    // An item whose required choice has no option left in stock cannot be ordered,
+    // so it is left off the menu along with sold-out items.
+    private static Optional<CustomerMenu.Item> orderable(MenuItem item) {
+        if (!item.isAvailable()) {
+            return Optional.empty();
+        }
+        List<CustomerMenu.OptionGroup> groups = new ArrayList<>();
+        for (OptionGroup group : item.getOptionGroups()) {
+            List<CustomerMenu.Option> options = group.getOptions().stream()
+                    .filter(MenuOption::isAvailable)
+                    .map(option -> new CustomerMenu.Option(option.getId(), option.getName(), option.getPriceDelta()))
+                    .toList();
+            if (options.size() < group.getMinSelect()) {
+                return Optional.empty();
+            }
+            if (!options.isEmpty()) {
+                groups.add(new CustomerMenu.OptionGroup(group.getId(), group.getName(),
+                        group.getMinSelect(), Math.min(group.getMaxSelect(), options.size()), options));
+            }
+        }
+        return Optional.of(new CustomerMenu.Item(item.getId(), item.getName(), item.getDescription(),
+                item.getBasePrice(), item.getImageUrl(), groups));
     }
 
     @Transactional(readOnly = true)

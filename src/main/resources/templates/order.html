@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Your order</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="customer" th:data-qr-token="${qrToken}" th:data-public-token="${publicToken}">
+<header class="customer-head">
+    <h1 id="restaurant">Your order</h1>
+    <p class="muted" id="table"></p>
+</header>
+
+<main class="customer-main">
+    <ol id="steps" class="steps" aria-label="Order progress"></ol>
+    <p id="status-text" class="status-text" role="status"></p>
+    <section class="receipt">
+        <h2>Order summary</h2>
+        <div id="lines"></div>
+        <p id="note" class="muted"></p>
+        <p class="cart-total"><span>Total</span><strong id="total"></strong></p>
+    </section>
+    <p class="muted small">This page updates by itself. Pay at the counter or ask your server.</p>
+    <a class="button" th:href="@{/t/{qr}(qr=${qrToken})}">Order more</a>
+</main>
+
+<script th:src="@{/js/api.js}"></script>
+<script th:src="@{/js/money.js}"></script>
+<script th:src="@{/js/order.js}"></script>
+</body>
+</html>

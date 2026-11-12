@@ -1,5 +1,7 @@
 package heeyoung.tabletap.common;
 
+import heeyoung.tabletap.order.IllegalOrderTransitionException;
+import heeyoung.tabletap.order.InvalidOrderException;
 import java.sql.SQLException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -22,5 +24,15 @@ public class ApiExceptionHandler {
             return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "This conflicts with existing data");
         }
         throw e;
+    }
+
+    @ExceptionHandler(InvalidOrderException.class)
+    ProblemDetail invalidOrder(InvalidOrderException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalOrderTransitionException.class)
+    ProblemDetail illegalTransition(IllegalOrderTransitionException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
     }
 }

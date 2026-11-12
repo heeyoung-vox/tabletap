@@ -11,7 +11,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class TableLookup {
 
-    public record ScannedTable(UUID tenantId, UUID tableId, String tableLabel, String restaurantName) {
+    public record ScannedTable(
+            UUID tenantId, UUID tableId, String tableLabel, String restaurantName, String currency) {
     }
 
     private final JdbcTemplate jdbc;
@@ -28,7 +29,7 @@ public class TableLookup {
             return Optional.empty();
         }
         return jdbc.query("""
-                        select t.tenant_id, t.id, t.label, r.name
+                        select t.tenant_id, t.id, t.label, r.name, r.currency
                         from dining_table t
                         join tenant r on r.id = t.tenant_id
                         where t.qr_token = ? and t.active
@@ -37,7 +38,8 @@ public class TableLookup {
                         rs.getObject("tenant_id", UUID.class),
                         rs.getObject("id", UUID.class),
                         rs.getString("label"),
-                        rs.getString("name")),
+                        rs.getString("name"),
+                        rs.getString("currency")),
                 token).stream().findFirst();
     }
 }

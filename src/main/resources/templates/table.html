@@ -6,11 +6,45 @@
     <title th:text="${restaurantName}">Restaurant</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
-<body>
-<main class="auth">
+<body class="customer" th:data-qr-token="${qrToken}">
+<header class="customer-head">
     <h1 th:text="${restaurantName}">Restaurant</h1>
-    <p class="lead">Table <strong th:text="${tableLabel}">1</strong></p>
-    <p class="muted">The menu will appear here soon.</p>
+    <p class="muted">Table <strong th:text="${tableLabel}">1</strong></p>
+    <nav id="my-orders" class="my-orders" hidden></nav>
+</header>
+
+<main class="customer-main">
+    <p id="notice" class="notice" role="status" hidden></p>
+    <div id="menu"><p class="empty">Loading the menu…</p></div>
 </main>
+
+<div class="cart-bar" id="cart-bar" hidden>
+    <button id="open-cart" class="button primary cart-button" type="button"></button>
+</div>
+
+<dialog id="item-dialog" aria-labelledby="item-title">
+    <form id="item-form" method="dialog"></form>
+</dialog>
+
+<dialog id="cart-dialog" aria-labelledby="cart-title">
+    <form id="cart-form" method="dialog">
+        <h2 id="cart-title">Your order</h2>
+        <div id="cart-lines"></div>
+        <div class="field">
+            <label for="order-note">Note for the kitchen</label>
+            <textarea id="order-note" rows="2" maxlength="500" placeholder="Allergies, no ice…"></textarea>
+        </div>
+        <p class="cart-total"><span>Total</span><strong id="cart-total"></strong></p>
+        <p id="cart-error" class="error" role="alert"></p>
+        <div class="dialog-foot">
+            <button class="button" type="button" id="close-cart">Keep browsing</button>
+            <button class="button primary" type="submit" id="place-order">Place order</button>
+        </div>
+    </form>
+</dialog>
+
+<script th:src="@{/js/api.js}"></script>
+<script th:src="@{/js/money.js}"></script>
+<script th:src="@{/js/customer.js}"></script>
 </body>
 </html>
