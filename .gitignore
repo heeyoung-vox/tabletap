@@ -8,3 +8,5 @@ out/
 bin/
 .env
 *.log
+.claude/
+.codegraph/

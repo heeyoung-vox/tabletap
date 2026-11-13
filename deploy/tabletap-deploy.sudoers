@@ -1,0 +1,5 @@
+# Install with:  sudo install -m 440 deploy/tabletap-deploy.sudoers /etc/sudoers.d/tabletap-deploy
+# then check it:  sudo visudo -c
+# The deploy user can restart the app and dump the database, and nothing else as root.
+deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart tabletap
+deploy ALL=(postgres) NOPASSWD: /usr/bin/pg_dump tabletap

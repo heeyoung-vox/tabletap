@@ -4,6 +4,8 @@ QR menus and ordering for restaurants. A restaurant signs up, builds its menu an
 
 **Demo:** _add the URL after deploying_ · log in as `owner@pho.demo` / `tabletap-demo` (a second restaurant: `owner@banhmi.demo`, same password). API docs are at `/swagger-ui.html`.
 
+**Guide:** [docs/GUIDE.md](docs/GUIDE.md) has the commands for running locally, the page and API map, connecting to the database, and deploying and operating the server.
+
 <!-- Screenshots: add images of the customer menu (phone), the order status page and the kitchen board to docs/ and link them here. -->
 
 ## Features
@@ -17,7 +19,7 @@ QR menus and ordering for restaurants. A restaurant signs up, builds its menu an
 
 ## Stack
 
-Java 21, Spring Boot 3.5 (Web, Data JPA, Security, Validation, Thymeleaf), PostgreSQL 16 with Flyway, JWT in an HttpOnly cookie, ZXing for QR codes, springdoc-openapi, plain JavaScript on the front end. Tests use JUnit 5, AssertJ and Testcontainers. Docker Compose and Caddy run it in production.
+Java 21, Spring Boot 3.5 (Web, Data JPA, Security, Validation, Thymeleaf), PostgreSQL 16 with Flyway, JWT in an HttpOnly cookie, ZXing for QR codes, springdoc-openapi, plain JavaScript on the front end. Tests use JUnit 5, AssertJ and Playwright. In production it runs as a systemd service behind Caddy. No Docker anywhere: development, CI and the server all use Java 21 and PostgreSQL installed directly.
 
 ## Architecture
 
@@ -71,23 +73,21 @@ Every table except `tenant` also has `tenant_id`.
 
 ## Run it
 
-With Docker:
+You need Java 21 and a local PostgreSQL. Create the user and databases once, as the PostgreSQL admin (`psql -U postgres`):
 
-```bash
-docker compose up
+```sql
+create role tabletap login password 'tabletap';
+create database tabletap owner tabletap;
+create database tabletap_test owner tabletap;
 ```
 
-Then open http://localhost:8080 and log in as `owner@pho.demo` / `tabletap-demo`. Each demo table's QR code opens its customer page.
-
-For development, start only the database and run the app with Gradle:
-
-```bash
-docker compose up postgres
-```
+Then start the app:
 
 ```bash
 ./gradlew bootRun --args='--spring.profiles.active=dev,demo'
 ```
+
+Open http://localhost:8080 and log in as `owner@pho.demo` / `tabletap-demo`. Each demo table's QR code opens its customer page.
 
 To scan codes with a phone on the same network, set `APP_BASE_URL=http://<your computer's LAN IP>:8080` before starting.
 
@@ -97,25 +97,29 @@ To scan codes with a phone on the same network, set `APP_BASE_URL=http://<your c
 ./gradlew test
 ```
 
-Integration tests start PostgreSQL with Testcontainers when Docker is running. Without Docker, point them at an existing database:
+Integration tests need a PostgreSQL database, named by `TEST_DATABASE_URL`. Use the `tabletap_test` database created above, so tests never write into your development data:
 
 ```bash
-TEST_DATABASE_URL=jdbc:postgresql://localhost:5432/tabletap ./gradlew test
+TEST_DATABASE_URL=jdbc:postgresql://localhost:5432/tabletap_test ./gradlew test
 ```
 
-With neither, they are skipped locally. CI fails instead of skipping.
+Without `TEST_DATABASE_URL` the database tests are skipped locally. CI fails instead of skipping.
+
+`./gradlew build` also runs the browser tests (`./gradlew browserTest`). Set `BROWSER_CHANNEL=chrome` or `msedge` to use a browser you already have. Without it, Playwright downloads its own Chromium on first run.
 
 ## Deploy
 
-The production setup is one small Linux server running `compose.prod.yaml`: PostgreSQL (not reachable from outside), the app, and Caddy, which gets an HTTPS certificate for your domain.
+The production setup is one small Linux server with everything installed directly, no Docker: PostgreSQL 16 (listening on localhost only), the app run by systemd, and Caddy, which gets an HTTPS certificate for your domain. The files are in `deploy/`.
 
-1. Create the server (for example an AWS EC2 `t3.micro` with Ubuntu). Open only ports 22, 80 and 443. Set a billing alarm.
-2. Add 1 GB of swap, since the server has 1 GB of memory:
-   `sudo fallocate -l 1G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile`
-3. Install Docker and the Compose plugin.
+1. Create the server (for example AWS EC2 with Ubuntu 24.04). Open only ports 22, 80 and 443. Set a billing alarm.
+2. Add 1 GB of swap so the Gradle build fits in memory.
+3. Install `openjdk-21-jdk-headless`, `postgresql` and Caddy, and create the `tabletap` database and user.
 4. Point your domain's DNS A record at the server's public IP.
-5. Clone the repository, copy `.env.example` to `.env` and fill it in.
-6. Start it: `docker compose -f compose.prod.yaml up -d --build`.
+5. Clone the repository, build with `./gradlew bootJar`, and copy the jar to `/opt/tabletap/`.
+6. Copy `deploy/tabletap.env.example` to `/etc/tabletap/tabletap.env` and fill it in.
+7. Install `deploy/tabletap.service` and `deploy/Caddyfile`, then start both.
+
+[docs/GUIDE.md](docs/GUIDE.md#6-deploy-to-a-server) has every command.
 
 Settings are read from environment variables: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `APP_BASE_URL`. Never commit them.
 

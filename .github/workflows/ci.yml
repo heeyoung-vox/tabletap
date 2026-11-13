@@ -1,20 +1,83 @@
-name: CI
+name: CI/CD
 
+# Pull requests run the tests. A push to main runs the tests and, if they pass,
+# deploys the same jar to the production server.
 on:
   push:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # The Ubuntu 24.04 runner ships PostgreSQL 16 installed but stopped.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      # User and password match application-dev.yml.
+      - name: Start PostgreSQL
+        run: |
+          sudo systemctl start postgresql.service
+          sudo -u postgres psql -v ON_ERROR_STOP=1 \
+            -c "create role tabletap login password 'tabletap'" \
+            -c "create database tabletap_test owner tabletap"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
+      # Includes the browser journeys, run in the Chrome that the runner ships with.
       - run: ./gradlew build
-      - name: Build the Docker image
-        run: docker build -t tabletap .
+        env:
+          TEST_DATABASE_URL: jdbc:postgresql://localhost:5432/tabletap_test
+          BROWSER_CHANNEL: chrome
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-reports
+          path: build/reports/tests
+      # The jar that passed the tests is the one that gets deployed.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tabletap-jar
+          path: build/libs/tabletap.jar
+          retention-days: 7
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    # Add required reviewers to this environment in GitHub to approve each deploy.
+    environment: production
+    # Never run two deploys at once, and never cancel one halfway.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: tabletap-jar
+      - name: Set up SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Copy the jar and deploy script, then deploy
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" 'mkdir -p ~/incoming'
+          scp tabletap.jar deploy/deploy.sh "$DEPLOY_USER@$DEPLOY_HOST:incoming/"
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" 'bash ~/incoming/deploy.sh ~/incoming/tabletap.jar'
+      - name: Check the public site
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        run: curl -fsS --retry 5 --retry-delay 3 --retry-all-errors "$APP_URL/actuator/health" | grep -q '"status":"UP"'

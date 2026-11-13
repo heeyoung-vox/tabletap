@@ -33,9 +33,7 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-    testImplementation 'org.testcontainers:junit-jupiter'
-    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'com.microsoft.playwright:playwright:1.52.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -48,8 +46,27 @@ tasks.named('jar') {
     enabled = false
 }
 
+// Browser tests drive the pages in a real browser, so they run as their own
+// task. `check` (and so `build`) runs both.
 tasks.named('test') {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'browser'
+    }
+}
+
+tasks.register('browserTest', Test) {
+    description = 'Runs the browser journeys with Playwright.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'browser'
+    }
+    shouldRunAfter 'test'
+}
+
+tasks.named('check') {
+    dependsOn 'browserTest'
 }
 
 tasks.withType(JavaCompile).configureEach {

@@ -18,8 +18,8 @@ This file is the source of truth for implementation sessions. If a session needs
 | QR sheet | Printable HTML page (`/admin/tables/print`), printed or saved as PDF from the browser |
 | Live updates | Server-Sent Events (`SseEmitter`) |
 | API docs | springdoc-openapi |
-| Tests | JUnit 5, AssertJ, Testcontainers (PostgreSQL), MockMvc |
-| Delivery | Dockerfile, Docker Compose, GitHub Actions |
+| Tests | JUnit 5, AssertJ, PostgreSQL named by `TEST_DATABASE_URL`, Playwright |
+| Delivery | GitHub Actions, systemd, Caddy. No Docker (see design decision 9) |
 
 Base package: `heeyoung.tabletap`. Package by feature, not by layer: `tenant`, `auth`, `menu`, `floor`, `order`, `kitchen`, `common`.
 
@@ -81,6 +81,17 @@ Transitions live in one place (an enum method or a small `OrderStateMachine` cla
 ### 8. Customers have no accounts
 
 Placing an order returns a random `public_token`. The customer page uses it to show order status. The cart lives in the browser (`localStorage`) until the order is placed.
+
+### 9. No Docker
+
+The project doesn't use Docker anywhere: not to develop, test, build or deploy. Everything runs on Java 21 and PostgreSQL 16 installed directly.
+
+- Development: a local PostgreSQL, `./gradlew bootRun`.
+- Tests: the database named by `TEST_DATABASE_URL` (Testcontainers was removed).
+- CI: the PostgreSQL that comes installed on the Ubuntu 24.04 GitHub runner.
+- Production: PostgreSQL from apt, the jar run by systemd (`deploy/tabletap.service`), Caddy from apt for HTTPS (`deploy/Caddyfile`). Settings in `/etc/tabletap/tabletap.env`.
+
+Removed with it: `Dockerfile`, `compose.yaml`, `compose.prod.yaml`, `scripts/smoke.sh` and the CI `smoke` job. `.env.example` moved to `deploy/tabletap.env.example`. Don't add Docker files back.
 
 ## Data model
 
@@ -167,14 +178,14 @@ Finish and verify each phase before starting the next. Every phase ends with pas
 ### Phase 1: skeleton
 
 - Spring Boot project with the Gradle wrapper.
-- `compose.yaml` with PostgreSQL for local development.
+- A local PostgreSQL for development (`tabletap` user and database).
 - Profiles: `dev` (local defaults) and `prod` (everything from environment variables).
 - Flyway baseline migration creating `tenant`.
 - `.gitattributes` forcing LF for `gradlew` and `*.sh`. `.gitignore`.
 - GitHub Actions workflow running `./gradlew build`.
-- A Testcontainers base class for integration tests.
+- An `IntegrationTest` base class for tests that need the database.
 
-Done when: the app starts against the Compose database, `/actuator/health` returns UP, and CI is green.
+Done when: the app starts against the local database, `/actuator/health` returns UP, and CI is green.
 
 ### Phase 2: tenancy and auth
 
@@ -225,11 +236,11 @@ Done when: placing an order in one browser shows it on the kitchen page in anoth
 
 - Seed data for two demo restaurants behind a `demo` profile.
 - OpenAPI docs at `/swagger-ui.html`.
-- Multi-stage `Dockerfile` and a `compose.prod.yaml` (app, PostgreSQL, Caddy for HTTPS).
-- Deploy to one AWS EC2 `t3.micro` running Docker.
+- `deploy/` with a systemd unit, a settings template and a Caddyfile for HTTPS.
+- Deploy to one AWS EC2 Ubuntu server with PostgreSQL, Java and Caddy installed directly.
 - README with a feature list, ER diagram, architecture notes, screenshots, demo link and demo login.
 
-Done when: the demo URL works from a phone on mobile data, and a fresh clone runs with `docker compose up`.
+Done when: the demo URL works from a phone on mobile data, and a fresh clone runs with `./gradlew bootRun` against a local PostgreSQL.
 
 ## Development and deployment
 
@@ -238,8 +249,8 @@ Development happens on Windows. Production is Linux on AWS. To keep them compati
 - No hardcoded file paths or backslashes. Use config values and relative paths.
 - Keep file name casing consistent. Linux is case-sensitive, so `Menu.html` and `menu.html` differ there.
 - Secrets come from environment variables: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `APP_BASE_URL`. Never commit them.
-- The Docker image is the unit of deployment. Test the image locally before deploying.
-- On AWS, open only ports 22, 80, and 443. PostgreSQL is reachable only inside the Compose network. Set a billing alarm.
+- The jar from `./gradlew bootJar` is the unit of deployment. Run it locally with the `prod` profile before deploying.
+- On AWS, open only ports 22, 80, and 443. PostgreSQL and the app listen on localhost only, and Caddy is the only public entry. Set a billing alarm.
 
 ## Conventions
 
@@ -248,7 +259,7 @@ Development happens on Windows. Production is Linux on AWS. To keep them compati
 - `@Transactional` on service methods, not controllers.
 - Schema changes only through new Flyway migrations. Never edit an applied migration. `spring.jpa.hibernate.ddl-auto=validate`.
 - Tests assert behaviour through the HTTP API or a service's public methods, not internals.
-- Integration tests extend `IntegrationTest`. They use Testcontainers when Docker is running. Without Docker, set `TEST_DATABASE_URL` (for example `jdbc:postgresql://localhost:5432/tabletap`, user and password `tabletap`) to run them against an existing database. With neither, they are skipped. Because the database can outlive a test run, every test creates its own uniquely named data.
+- Integration tests extend `IntegrationTest`. Set `TEST_DATABASE_URL` (for example `jdbc:postgresql://localhost:5432/tabletap_test`, user and password `tabletap`) to run them. Without it they are skipped locally, and CI fails. Because the database can outlive a test run, every test creates its own uniquely named data.
 - Small commits, one logical change each, with clear messages.
 
 ## Known limitations

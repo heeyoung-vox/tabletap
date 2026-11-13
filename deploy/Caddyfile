@@ -1,6 +1,7 @@
-{$DOMAIN} {
+# Copy to /etc/caddy/Caddyfile and replace the domain with yours.
+tabletap.example.com {
 	encode gzip
 	# Caddy flushes text/event-stream responses at once, so the kitchen's live
 	# stream needs no extra settings.
-	reverse_proxy app:8080
+	reverse_proxy localhost:8080
 }

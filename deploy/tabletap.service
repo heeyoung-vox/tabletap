@@ -1,0 +1,27 @@
+# Copy to /etc/systemd/system/tabletap.service, then:
+#   sudo systemctl daemon-reload && sudo systemctl enable --now tabletap
+[Unit]
+Description=TableTap
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+User=tabletap
+Group=tabletap
+WorkingDirectory=/opt/tabletap
+EnvironmentFile=/etc/tabletap/tabletap.env
+# A fixed heap keeps the app's memory predictable next to PostgreSQL and Caddy.
+ExecStart=/usr/bin/java -Xmx384m -jar /opt/tabletap/tabletap.jar
+# Spring exits with 143 on SIGTERM; treat that as a clean stop.
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5
+
+# The app writes nothing to disk, so lock the filesystem down.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
